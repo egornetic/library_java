@@ -25,11 +25,12 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
             while (true) {
                 Request request = (Request) in.readObject();
-                if (request == null) break;
+                if (request == null)
+                    break;
 
                 Object responseData = handleRequest(request);
                 out.writeObject(new Response(responseData));
@@ -39,7 +40,10 @@ public class ClientHandler implements Runnable {
         } catch (Exception e) {
             System.out.println("Client disconnected: " + socket.getInetAddress());
         } finally {
-            try { socket.close(); } catch (Exception ignored) {}
+            try {
+                socket.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -70,7 +74,6 @@ public class ClientHandler implements Runnable {
                 return borrowBook((BorrowRecord) data);
 
             case "RETURN_BOOK":
-                // data will be an array [userId, bookId]
                 int[] returnData = (int[]) data;
                 return returnBook(returnData[0], returnData[1]);
 
@@ -82,7 +85,7 @@ public class ClientHandler implements Runnable {
     private void ensureUserTableExists(int userId) throws SQLException {
         String tableName = "borrowed_user_" + userId;
         try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement()) {
+                Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + tableName + " (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "book_id INT, " +
@@ -93,7 +96,6 @@ public class ClientHandler implements Runnable {
 
     private String borrowBook(BorrowRecord record) {
         try {
-            // ФИНАЛЬНАЯ ПРОВЕРКА: доступна ли книга на самом деле в БД прямо сейчас?
             if (!isBookAvailable(record.getBookId())) {
                 return "ALREADY_BORROWED";
             }
@@ -104,7 +106,7 @@ public class ClientHandler implements Runnable {
             String tableName = "borrowed_user_" + record.getUserId();
             String query = "INSERT INTO " + tableName + " (book_id, date) VALUES (?, ?)";
             try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(query)) {
+                    PreparedStatement pstmt = conn.prepareStatement(query)) {
                 pstmt.setInt(1, record.getBookId());
                 pstmt.setDate(2, java.sql.Date.valueOf(LocalDate.now()));
                 pstmt.executeUpdate();
@@ -119,7 +121,7 @@ public class ClientHandler implements Runnable {
     private boolean isBookAvailable(int bookId) {
         String query = "SELECT available FROM books WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setInt(1, bookId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -136,10 +138,10 @@ public class ClientHandler implements Runnable {
         try {
             String tableName = "borrowed_user_" + userId;
             bookRepository.updateAvailability(bookId, true);
-            
+
             String query = "DELETE FROM " + tableName + " WHERE book_id = ?";
             try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(query)) {
+                    PreparedStatement pstmt = conn.prepareStatement(query)) {
                 pstmt.setInt(1, bookId);
                 pstmt.executeUpdate();
                 return "SUCCESS";
@@ -155,18 +157,16 @@ public class ClientHandler implements Runnable {
         String tableName = "borrowed_user_" + userId;
         String query = "SELECT b.* FROM books b JOIN " + tableName + " m ON b.id = m.book_id";
         try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query)) {
             while (rs.next()) {
                 books.add(new Book(
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("author"),
-                        rs.getBoolean("available")
-                ));
+                        rs.getBoolean("available")));
             }
         } catch (SQLException e) {
-            // Table might not exist yet if user hasn't borrowed anything
             System.out.println("No personal table yet for user " + userId);
         }
         return books;

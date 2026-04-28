@@ -35,14 +35,18 @@ public class DatabaseConfig {
                     "date DATE, " +
                     "FOREIGN KEY (user_id) REFERENCES users(id), " +
                     "FOREIGN KEY (book_id) REFERENCES books(id))");
-            
-            // Add a default admin if not exists
-            stmt.executeUpdate("INSERT IGNORE INTO users (id, name, password, role) VALUES (1, 'admin', 'admin', 'ADMIN')");
-            stmt.executeUpdate("INSERT IGNORE INTO users (id, name, password, role) VALUES (2, 'user', 'user', 'USER')");
-            stmt.executeUpdate("INSERT IGNORE INTO users (id, name, password, role) VALUES (3, 'user1', 'user1', 'USER')");
-            stmt.executeUpdate("INSERT IGNORE INTO users (id, name, password, role) VALUES (4, 'user2', 'user2', 'USER')");
-            stmt.executeUpdate("INSERT IGNORE INTO users (id, name, password, role) VALUES (5, 'user3', 'user3', 'USER')");
-            
+
+            stmt.executeUpdate(
+                    "INSERT IGNORE INTO users (id, name, password, role) VALUES (1, 'admin', 'admin', 'ADMIN')");
+            stmt.executeUpdate(
+                    "INSERT IGNORE INTO users (id, name, password, role) VALUES (2, 'user', 'user', 'USER')");
+            stmt.executeUpdate(
+                    "INSERT IGNORE INTO users (id, name, password, role) VALUES (3, 'user1', 'user1', 'USER')");
+            stmt.executeUpdate(
+                    "INSERT IGNORE INTO users (id, name, password, role) VALUES (4, 'user2', 'user2', 'USER')");
+            stmt.executeUpdate(
+                    "INSERT IGNORE INTO users (id, name, password, role) VALUES (5, 'user3', 'user3', 'USER')");
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
